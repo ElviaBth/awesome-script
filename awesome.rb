@@ -1,11 +1,13 @@
+require 'dotenv/load'
 require 'json'
 require 'faraday'
+require 'nokogiri'
+require 'open-uri'
 
 base_url = "https://api.airtable.com/v0"
 base_id = ENV['BASE_ID']
 table_id = ENV['TABLE_NAME']
-personal_access_token = ENV['API_KEY']
-endpoint = "#{base_url}/#{base_id}/#{table_id}"
+personal_access_token = ENV['PERSONAL_ACCESS_TOKEN']
 
 
 def fetch_airtable_urls(base_url, base_id, table_id, personal_access_token)
@@ -30,10 +32,29 @@ end
 
 records = fetch_airtable_urls(base_url, base_id, table_id, personal_access_token)
 urls = records&.map { |record| record["fields"]["URL"] } 
+urls_length = urls.length
+installations_counts = []
 
-# Print the extracted URLs
-if urls
+if urls_length >= 1
   urls.each do |url|
-    puts "URL: #{url}"
+    begin
+      doc = Nokogiri::HTML(URI.open(url))
+      count = doc.xpath("//link[@rel='stylesheet'][contains(@href,'decidim_awesome')]").count
+
+      installations_counts << count
+
+      puts "URL: #{url}"
+      puts "Number of matching <link> elements: #{count}"
+
+    rescue StandardError => e
+      puts "Error for URL #{url}: #{e.message}"
+    end
   end
 end
+
+
+total_installations_counts = installations_counts.reduce { |sum, count|  sum + count}
+percentage_of_installations = ((Float(total_installations_counts) / urls_length) * 100).round(2)
+puts "installations_counts: #{total_installations_counts}"
+puts "urls_length: #{urls_length}"
+puts "The percentage of decidim awesome installations is: #{percentage_of_installations} %"
