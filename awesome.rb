@@ -32,6 +32,7 @@ records = fetch_airtable_urls(base_url, base_id, table_id, personal_access_token
 urls = records&.map { |record| record["fields"]["URL"] } 
 urls_length = urls.length
 installations_counts = []
+error_count = 0
 
 if urls_length >= 1
   require 'nokogiri'
@@ -47,6 +48,7 @@ if urls_length >= 1
       # puts "Number of matching <link> elements: #{count}"
 
     rescue StandardError => e
+      error_count += 1
       puts "Error for URL #{url}: #{e.message}"
     end
   end
@@ -57,4 +59,5 @@ total_installations_counts = installations_counts.reduce { |sum, count|  sum + c
 percentage_of_installations = ((Float(total_installations_counts) / urls_length) * 100).round(2)
 puts "installations_counts: #{total_installations_counts}"
 puts "urls_length: #{urls_length}"
+puts "Total number of errors: #{error_count}"
 puts "The percentage of decidim awesome installations is: #{percentage_of_installations} %"
