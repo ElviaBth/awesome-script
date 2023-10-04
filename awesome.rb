@@ -1,8 +1,6 @@
 require 'dotenv/load'
 require 'json'
 require 'faraday'
-require 'nokogiri'
-require 'open-uri'
 
 base_url = "https://api.airtable.com/v0"
 base_id = ENV['BASE_ID']
@@ -16,7 +14,7 @@ def fetch_airtable_urls(base_url, base_id, table_id, personal_access_token)
     faraday.headers['Content-Type'] = 'application/json'
     faraday.adapter Faraday.default_adapter
   end
-
+  
   begin
     response = conn.get
     if response.status == 200 
@@ -36,6 +34,8 @@ urls_length = urls.length
 installations_counts = []
 
 if urls_length >= 1
+  require 'nokogiri'
+  require 'open-uri'
   urls.each do |url|
     begin
       doc = Nokogiri::HTML(URI.open(url))
@@ -43,8 +43,8 @@ if urls_length >= 1
 
       installations_counts << count
 
-      puts "URL: #{url}"
-      puts "Number of matching <link> elements: #{count}"
+      # puts "URL: #{url}"
+      # puts "Number of matching <link> elements: #{count}"
 
     rescue StandardError => e
       puts "Error for URL #{url}: #{e.message}"
